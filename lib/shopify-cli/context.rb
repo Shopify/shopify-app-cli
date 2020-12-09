@@ -470,6 +470,10 @@ module ShopifyCli
       end
     end
 
+    def in_frame(text, &block)
+      CLI::UI.frame(text, color: :magenta, &block)
+    end
+
     private
 
     def ctx_path(fname)

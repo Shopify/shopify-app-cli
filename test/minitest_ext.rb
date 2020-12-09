@@ -18,6 +18,7 @@ module Minitest
       end
       project_context('project')
       ::ShopifyCli::Project.clear
+      ShopifyCli::TipOfTheDay.stubs(:call)
       super
     end
 
@@ -82,6 +83,9 @@ module Minitest
 
     def stub_prompt_for_cli_updates
       ShopifyCli::Config.stubs(:get_section).with("autoupdate").returns('enabled' => 'true')
+      # ShopifyCli::Config.stubs(:get_section).with("tipoftheday").returns('enabled' => 'false')
+      # ShopifyCli::Config.stubs(:get_bool).with("tipoftheday", "enabled").returns(false)
+      # ShopifyCli::Config.stubs(:get_section).with("tiplog").returns({})
     end
 
     def stub_new_version_check
