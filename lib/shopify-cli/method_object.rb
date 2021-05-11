@@ -52,8 +52,8 @@ module ShopifyCli
       # invokes the original `call` implementation and wraps its return value
       # into a result object.
       #
-      def call(*args, **kwargs)
-        Result.wrap { super(*args, **kwargs) }.call
+      ruby2_keywords def call(*args)
+        Result.wrap { super(*args) }.call
       end
     end
 
@@ -64,10 +64,27 @@ module ShopifyCli
       # initializer or to `call`. If the keyword argument matches the name of
       # property, it is forwarded to the initializer, otherwise to call.
       #
-      def call(*args, **kwargs)
-        properties.keys.yield_self do |properties|
-          new(**kwargs.slice(*properties))
-            .call(*args, **kwargs.slice(*(kwargs.keys - properties)))
+      ruby2_keywords def call(*args)
+        # This is an extremely complicated case of delegation. The method wants
+        # to delegate arguments, but to have control over which keyword
+        # arguments are delegated. I'm not sure the forward and backward
+        # compatibility of this unusual form of delegation has really been
+        # explored or there's any good way to support it. So I have done
+        # done something hacky here and I'm looking at the last argument and
+        # modifying the package of arguments to be delegated in-place.
+        if args.last.is_a?(Hash)
+          kwargs = args.last
+
+          initializer_kwargs = kwargs.slice(*properties.keys)
+          instance = new(**initializer_kwargs)
+
+          kwargs.reject! { |key| initializer_kwargs.key?(key) }
+          args.pop if kwargs.empty?
+          instance.call(*args)
+        else
+          # Since the former is so complicated - let's have a fast path that
+          # is much simpler.
+          new.call(*args)
         end
       end
 
